@@ -3,10 +3,15 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./library/ERC1155.sol";
+import "./library/ERC1155MintBurn.sol";
+import "./library/ERC1155Metadata.sol";
 
-contract ApparelArtTradable is ERC1155Burnable, Ownable
+contract ApparelArtTradable is 
+    ERC1155,
+    ERC1155MintBurn,
+    ERC1155Metadata,
+    Ownable
 {
     using SafeMath for uint256;
     uint256 private _currentTokenID = 0;
