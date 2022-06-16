@@ -5,12 +5,10 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./library/ERC1155.sol";
 import "./library/ERC1155MintBurn.sol";
-import "./library/ERC1155Metadata.sol";
 
 contract ApparelArtTradable is 
     ERC1155,
     ERC1155MintBurn,
-    ERC1155Metadata,
     Ownable
 {
     using SafeMath for uint256;
@@ -47,7 +45,7 @@ contract ApparelArtTradable is
         marketplace = _marketplace;
     }
 
-    function uri(uint256 _id) public view override returns (string memory) {
+    function uri(uint256 _id) public view returns (string memory) {
         require(_exists(_id), "ERC721Tradable#uri: NONEXISTENT_TOKEN");
         return _tokenURIs[_id];
     }

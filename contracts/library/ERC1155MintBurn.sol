@@ -9,7 +9,7 @@ import './ERC1155.sol';
  *      a parent contract to be executed as they are `internal` functions
  */
 contract ERC1155MintBurn is ERC1155 {
-
+  using SafeMath for uint256;
 
   /****************************************|
   |            Minting Functions           |
