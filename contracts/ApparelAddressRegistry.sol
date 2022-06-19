@@ -15,7 +15,10 @@ contract ApparelAddressRegistry is Ownable {
     address public marketplace;
 
     /// @notice NFTFactory contract
-    address public factory;
+    address public nftFactory;
+
+    /// @notice ArtFactory contract
+    address public artFactory;
 
     /// @notice TokenRegistry contract
     address public tokenRegistry;
@@ -44,7 +47,15 @@ contract ApparelAddressRegistry is Ownable {
      @dev Only admin
      */
     function updateNFTFactory(address _factory) external onlyOwner {
-        factory = _factory;
+        nftFactory = _factory;
+    }
+
+    /**
+     @notice Update ArtFactory contract
+     @dev Only admin
+     */
+    function updateArtFactory(address _factory) external onlyOwner {
+        artFactory = _factory;
     }
 
     /**
