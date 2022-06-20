@@ -12,6 +12,19 @@ contract ApparelArtTradable is
     Ownable
 {
     using SafeMath for uint256;
+    event Minted(
+        uint256 tokenId,
+        address beneficiary,
+        uint256 supply,
+        string tokenUri,
+        address minter
+    );
+    event UpdatePlatformFee(
+        uint256 platformFee
+    );
+    event UpdateFeeRecipient(
+        address payable feeRecipient
+    );
     uint256 private _currentTokenID = 0;
 
     // Optional mapping for token URIs
@@ -88,6 +101,7 @@ contract ApparelArtTradable is
         // Send fee to fee recipient
         (bool success, ) = feeReceipient.call{value: msg.value}("");
         require(success, "Transfer failed");
+        emit Minted(_id, _to, _supply, _uri, _msgSender());
     }
 
     function getCurrentTokenID() public view returns (uint256) {
