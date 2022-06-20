@@ -733,8 +733,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @param _nftAddress NFT contract address
     /// @param _tokenId TokenId
     /// @param _royalty Royalty
-    function 
-    Royalty(
+    function registerRoyalty(
         address _nftAddress,
         uint256 _tokenId,
         uint16 _royalty
