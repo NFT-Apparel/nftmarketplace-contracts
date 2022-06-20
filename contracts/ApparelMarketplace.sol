@@ -733,7 +733,8 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @param _nftAddress NFT contract address
     /// @param _tokenId TokenId
     /// @param _royalty Royalty
-    function registerRoyalty(
+    function 
+    Royalty(
         address _nftAddress,
         uint256 _tokenId,
         uint16 _royalty
@@ -766,7 +767,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             _royalty == 0 || _feeRecipient != address(0),
             "invalid fee recipient address"
         );
-        require(!_isApparelNFT(_nftAddress), "invalid nft address");
+        require(_isApparelNFT(_nftAddress), "invalid nft address");
 
         if (collectionRoyalties[_nftAddress].creator == address(0)) {
             collectionRoyalties[_nftAddress] = CollectionRoyalty(
