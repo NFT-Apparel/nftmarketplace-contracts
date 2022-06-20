@@ -115,7 +115,7 @@ interface IApparelAuction {
 }
 
 interface IApparelAddressRegistry {
-    function factory() external view returns (address);
+    function nftFactory() external view returns (address);
 
     function tokenRegistry() external view returns (address);
 
@@ -766,7 +766,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             _royalty == 0 || _feeRecipient != address(0),
             "invalid fee recipient address"
         );
-        require(!_isApparelNFT(_nftAddress), "invalid nft address");
+        require(_isApparelNFT(_nftAddress), "invalid nft address");
 
         if (collectionRoyalties[_nftAddress].creator == address(0)) {
             collectionRoyalties[_nftAddress] = CollectionRoyalty(
@@ -787,7 +787,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
 
     function _isApparelNFT(address _nftAddress) internal view returns (bool) {
         return
-            IApparelNFTFactory(addressRegistry.factory()).exists(_nftAddress);
+            IApparelNFTFactory(addressRegistry.nftFactory()).exists(_nftAddress);
     }
 
     /**
