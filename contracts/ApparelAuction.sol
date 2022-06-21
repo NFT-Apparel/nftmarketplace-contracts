@@ -222,7 +222,6 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         require(
-            _payToken == address(0) ||
                 (addressRegistry.tokenRegistry() != address(0) &&
                     IApparelTokenRegistry(addressRegistry.tokenRegistry())
                         .enabled(_payToken)),
@@ -869,11 +868,11 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     ) private {
         Auction memory auction = auctions[_nftAddress][_tokenId];
         if (auction.payToken == address(0)) {
-            // refund previous best (if bid exists)
-            (bool successRefund, ) = _currentHighestBidder.call{
-                value: _currentHighestBid
-            }("");
-            require(successRefund, "failed to refund previous bidder");
+            require(
+                auction.payToken != address(0),
+                "ERC20 method used for FTM auction"
+            );
+
         } else {
             IERC20 payToken = IERC20(auction.payToken);
             require(
