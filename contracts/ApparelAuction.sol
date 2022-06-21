@@ -222,9 +222,15 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         require(
+<<<<<<< HEAD
             (addressRegistry.tokenRegistry() != address(0) &&
                 IApparelTokenRegistry(addressRegistry.tokenRegistry())
                     .enabled(_payToken)),
+=======
+                (addressRegistry.tokenRegistry() != address(0) &&
+                    IApparelTokenRegistry(addressRegistry.tokenRegistry())
+                        .enabled(_payToken)),
+>>>>>>> 30468a1d9561ead70aae43349db6af7c32cbbda0
             "invalid pay token"
         );
 
@@ -420,6 +426,7 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             // Work out platform fee from above reserve amount
             uint256 platformFeeAboveReserve = aboveReservePrice *platformFee / 1000;
 
+<<<<<<< HEAD
              require(
                 auction.payToken != address(0),
                 "ERC20 method used for FTM auction"
@@ -433,6 +440,20 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 ),
                 "failed to send platform fee"
             );  
+=======
+            if (auction.payToken == address(0)) {
+                require( auction.payToken != address(0), "ERC20 method used for FTM auction");
+            } else {
+                IERC20 payToken = IERC20(auction.payToken);
+                require(
+                    payToken.transfer(
+                        platformFeeRecipient,
+                        platformFeeAboveReserve
+                    ),
+                    "failed to send platform fee"
+                );
+            }
+>>>>>>> 30468a1d9561ead70aae43349db6af7c32cbbda0
 
             // Send remaining to designer
             payAmount = winningBid - platformFeeAboveReserve;
@@ -447,6 +468,7 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint16 royalty = marketplace.royalties(_nftAddress, _tokenId);
         if (minter != address(0) && royalty != 0) {
             uint256 royaltyFee = payAmount * royalty / 10000;
+<<<<<<< HEAD
             require(
                 auction.payToken != address(0),
                 "ERC20 method used for FTM auction"
@@ -456,15 +478,51 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 payToken.transfer(minter, royaltyFee),
                 "failed to send the owner their royalties"
             );
+=======
+            if (auction.payToken == address(0)) {
+                require( auction.payToken != address(0), "ERC20 method used for FTM auction");
+            } else {
+                IERC20 payToken = IERC20(auction.payToken);
+                require(
+                    payToken.transfer(minter, royaltyFee),
+                    "failed to send the owner their royalties"
+                );
+            }
+>>>>>>> 30468a1d9561ead70aae43349db6af7c32cbbda0
             payAmount = payAmount - royaltyFee;
         } else {
             (royalty, , minter) = marketplace.collectionRoyalties(_nftAddress);
             if (minter != address(0) && royalty != 0) {
                 uint256 royaltyFee = payAmount * royalty / 10000;
+<<<<<<< HEAD
                 require(
                     auction.payToken != address(0),
                     "ERC20 method used for FTM auction"
                 );
+=======
+                if (auction.payToken == address(0)) {
+                    (bool royaltyTransferSuccess, ) = payable(minter).call{
+                        value: royaltyFee
+                    }("");
+                    require(
+                        royaltyTransferSuccess,
+                        "failed to send the royalties"
+                    );
+                } else {
+                    IERC20 payToken = IERC20(auction.payToken);
+                    require(
+                        payToken.transfer(minter, royaltyFee),
+                        "failed to send the royalties"
+                    );
+                }
+                payAmount = payAmount - royaltyFee;
+            }
+        }
+        if (payAmount > 0) {
+            if (auction.payToken == address(0)) {
+                require( auction.payToken != address(0), "ERC20 method used for FTM auction");
+            } else {
+>>>>>>> 30468a1d9561ead70aae43349db6af7c32cbbda0
                 IERC20 payToken = IERC20(auction.payToken);
                 require(
                     payToken.transfer(minter, royaltyFee),
@@ -846,6 +904,7 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _currentHighestBid
     ) private {
         Auction memory auction = auctions[_nftAddress][_tokenId];
+<<<<<<< HEAD
         require(
             auction.payToken != address(0),
             "ERC20 method used for FTM auction"
@@ -855,6 +914,18 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             payToken.transfer(_currentHighestBidder, _currentHighestBid),
             "failed to refund previous bidder"
         );
+=======
+        if (auction.payToken == address(0)) {
+            require( auction.payToken != address(0), "ERC20 method used for FTM auction");
+
+        } else {
+            IERC20 payToken = IERC20(auction.payToken);
+            require(
+                payToken.transfer(_currentHighestBidder, _currentHighestBid),
+                "failed to refund previous bidder"
+            );
+        }
+>>>>>>> 30468a1d9561ead70aae43349db6af7c32cbbda0
         emit BidRefunded(
             _nftAddress,
             _tokenId,
