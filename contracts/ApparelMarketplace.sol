@@ -787,7 +787,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
 
     function _isApparelNFT(address _nftAddress) internal view returns (bool) {
         return
-            IApparelNFTFactory(addressRegistry.factory()).exists(_nftAddress);
+            IApparelNFTFactory(addressRegistry.nftFactory()).exists(_nftAddress) || IApparelNFTFactory(addressRegistry.artFactory()).exists(_nftAddress);
     }
 
     /**
