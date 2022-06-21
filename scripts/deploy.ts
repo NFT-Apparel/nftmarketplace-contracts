@@ -1,4 +1,6 @@
+import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
+const fs = require('fs/promises');
 import { TREASURY_ADDRESS, PLATFORM_FEE, WRAPPED_ETH_MAINNET, PRO_ADDRESS, PEAK_ADDRESS, ROUTER_ADDRESS } from './constants.json';
 // to deploy locally
 // run: npx hardhat node on a terminal
@@ -16,25 +18,77 @@ async function main() {
 
     console.log('ApparelMarketplace deployed to:', marketplace.address);
 
+    const observed_data : Array<any> = [];
+    const generate_deploy_info = async function (contract : Contract, name : string, type : string){
+  
+      let deploy_info : {_id : string, trx : string, name:string, block:object, type:string, created:object} = {_id : '', trx : '', name : '', block : {}, type : '',created:{}};
+      deploy_info._id = contract.address;
+      deploy_info.trx = contract.deployTransaction.hash;
+      let blockNumber;
+      deploy_info.name = name;
+      {
+        blockNumber = (await ethers.provider.getTransaction(contract.deployTransaction.hash)).blockNumber;
+        deploy_info.block = {
+          "$numberLong": `${blockNumber.toString()}`
+        }
+      }
+      deploy_info.type = type;
+      {
+        const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp
+        deploy_info.created = {
+          "$date": {
+            "$numberLong": `${timestamp.toString()}000`
+          }
+        }
+      }
+  
+      return deploy_info;
+    }
+    
+    {
+      const deploy_info = await generate_deploy_info(marketplace, "ApparelMarketplace", "market3");
+      observed_data.push(deploy_info)
+    }
     //////// Auction
     const Auction = await ethers.getContractFactory('ApparelAuction');
     const auction = await upgrades.deployProxy(Auction, [TREASURY_ADDRESS]);
     await auction.deployed();
     console.log('ApparelAuction deployed to:', auction.address);
     ////////
+    {
+      const deploy_info = await generate_deploy_info(auction, "ApparelAuction", "auction3");
+      observed_data.push(deploy_info)
+    }
 
     ////////
-    const Factory = await ethers.getContractFactory('ApparelNFTFactory');
-    const factory = await Factory.deploy(
+    const NFTFactory = await ethers.getContractFactory('ApparelNFTFactory');
+    const nftFactory = await NFTFactory.deploy(
         auction.address,
         marketplace.address,
         '750000000000000000',
         TREASURY_ADDRESS,
         '100000000000000000'
     );
-    await factory.deployed();
-    console.log('ApparelNFTFactory deployed to:', factory.address);
+    await nftFactory.deployed();
+    {
+      const deploy_info = await generate_deploy_info(nftFactory, "ApparelNFTFactory", "nft_factory");
+      observed_data.push(deploy_info)
+    }
+    console.log('ApparelNFTFactory deployed to:', nftFactory.address);
     ////////    
+    const ArtFactory = await ethers.getContractFactory('ApparelArtFactory');
+    const artFactory = await ArtFactory.deploy(
+        marketplace.address,
+        '750000000000000000',
+        TREASURY_ADDRESS,
+        '100000000000000000'
+    );
+    await artFactory.deployed();
+    {
+      const deploy_info = await generate_deploy_info(artFactory, "ApparelArtFactory", "art_factory");
+      observed_data.push(deploy_info)
+    }
+    console.log('ApparelArtFactory deployed to:', artFactory.address);
 
     ////////
     // const NFTTradable = await ethers.getContractFactory('ApparelNFTTradable');
@@ -58,6 +112,10 @@ async function main() {
 
     console.log('ApparelTokenRegistry deployed to', tokenRegistry.address);
     ////////
+    {
+      const deploy_info = await generate_deploy_info(tokenRegistry, "ApparelTokenRegistry", "token_registry");
+      observed_data.push(deploy_info)
+    }
 
     ////////
     const AddressRegistry = await ethers.getContractFactory('ApparelAddressRegistry');
@@ -68,6 +126,10 @@ async function main() {
     console.log('ApparelAddressRegistry deployed to', addressRegistry.address);
     const APPAREL_ADDRESS_REGISTRY = addressRegistry.address;
     ////////
+    {
+      const deploy_info = await generate_deploy_info(addressRegistry, "ApparelAddressRegistry", "address_registry");
+      observed_data.push(deploy_info)
+    }
 
     ////////
     const PriceFeed = await ethers.getContractFactory('ApparelPriceFeed');
@@ -87,13 +149,20 @@ async function main() {
     
     await addressRegistry.updateAuction(auction.address);
     await addressRegistry.updateMarketplace(marketplace.address);
-    await addressRegistry.updateNFTFactory(factory.address);
+    await addressRegistry.updateNFTFactory(nftFactory.address);
+    await addressRegistry.updateArtFactory(artFactory.address);
     await addressRegistry.updateTokenRegistry(tokenRegistry.address);
     await addressRegistry.updatePriceFeed(priceFeed.address);
 
     await tokenRegistry.add(WRAPPED_ETH_MAINNET);
     await tokenRegistry.add(PEAK_ADDRESS);
 
+    const content = JSON.stringify(observed_data)
+      console.log(content);
+      await fs.writeFile("observed.json", content, {
+        encoding: 'utf-8'
+    })
+      
   }
   
 // We recommend this pattern to be able to use async/await everywhere

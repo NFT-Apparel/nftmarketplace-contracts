@@ -222,10 +222,9 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         require(
-            _payToken == address(0) ||
-                (addressRegistry.tokenRegistry() != address(0) &&
-                    IApparelTokenRegistry(addressRegistry.tokenRegistry())
-                        .enabled(_payToken)),
+            (addressRegistry.tokenRegistry() != address(0) &&
+                IApparelTokenRegistry(addressRegistry.tokenRegistry())
+                    .enabled(_payToken)),
             "invalid pay token"
         );
 
@@ -421,22 +420,19 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             // Work out platform fee from above reserve amount
             uint256 platformFeeAboveReserve = aboveReservePrice *platformFee / 1000;
 
-            if (auction.payToken == address(0)) {
-                // Send platform fee
-                (bool platformTransferSuccess, ) = platformFeeRecipient.call{
-                    value: platformFeeAboveReserve
-                }("");
-                require(platformTransferSuccess, "failed to send platform fee");
-            } else {
-                IERC20 payToken = IERC20(auction.payToken);
-                require(
-                    payToken.transfer(
-                        platformFeeRecipient,
-                        platformFeeAboveReserve
-                    ),
-                    "failed to send platform fee"
-                );
-            }
+             require(
+                auction.payToken != address(0),
+                "ERC20 method used for FTM auction"
+            );
+
+            IERC20 payToken = IERC20(auction.payToken);
+            require(
+                payToken.transfer(
+                    platformFeeRecipient,
+                    platformFeeAboveReserve
+                ),
+                "failed to send platform fee"
+            );  
 
             // Send remaining to designer
             payAmount = winningBid - platformFeeAboveReserve;
@@ -451,60 +447,42 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint16 royalty = marketplace.royalties(_nftAddress, _tokenId);
         if (minter != address(0) && royalty != 0) {
             uint256 royaltyFee = payAmount * royalty / 10000;
-            if (auction.payToken == address(0)) {
-                (bool royaltyTransferSuccess, ) = payable(minter).call{
-                    value: royaltyFee
-                }("");
-                require(
-                    royaltyTransferSuccess,
-                    "failed to send the owner their royalties"
-                );
-            } else {
-                IERC20 payToken = IERC20(auction.payToken);
-                require(
-                    payToken.transfer(minter, royaltyFee),
-                    "failed to send the owner their royalties"
-                );
-            }
+            require(
+                auction.payToken != address(0),
+                "ERC20 method used for FTM auction"
+            );
+            IERC20 payToken = IERC20(auction.payToken);
+            require(
+                payToken.transfer(minter, royaltyFee),
+                "failed to send the owner their royalties"
+            );
             payAmount = payAmount - royaltyFee;
         } else {
             (royalty, , minter) = marketplace.collectionRoyalties(_nftAddress);
             if (minter != address(0) && royalty != 0) {
                 uint256 royaltyFee = payAmount * royalty / 10000;
-                if (auction.payToken == address(0)) {
-                    (bool royaltyTransferSuccess, ) = payable(minter).call{
-                        value: royaltyFee
-                    }("");
-                    require(
-                        royaltyTransferSuccess,
-                        "failed to send the royalties"
-                    );
-                } else {
-                    IERC20 payToken = IERC20(auction.payToken);
-                    require(
-                        payToken.transfer(minter, royaltyFee),
-                        "failed to send the royalties"
-                    );
-                }
+                require(
+                    auction.payToken != address(0),
+                    "ERC20 method used for FTM auction"
+                );
+                IERC20 payToken = IERC20(auction.payToken);
+                require(
+                    payToken.transfer(minter, royaltyFee),
+                    "failed to send the royalties"
+                );
                 payAmount = payAmount - royaltyFee;
             }
         }
         if (payAmount > 0) {
-            if (auction.payToken == address(0)) {
-                (bool ownerTransferSuccess, ) = auction.owner.call{
-                    value: payAmount
-                }("");
-                require(
-                    ownerTransferSuccess,
-                    "failed to send the owner the auction balance"
-                );
-            } else {
-                IERC20 payToken = IERC20(auction.payToken);
-                require(
-                    payToken.transfer(auction.owner, payAmount),
-                    "failed to send the owner the auction balance"
-                );
-            }
+            require(
+                auction.payToken != address(0),
+                "ERC20 method used for FTM auction"
+            );
+            IERC20 payToken = IERC20(auction.payToken);
+            require(
+                payToken.transfer(auction.owner, payAmount),
+                "failed to send the owner the auction balance"
+            );
         }
 
         // Transfer the token to the winner
@@ -868,19 +846,15 @@ contract ApparelAuction is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _currentHighestBid
     ) private {
         Auction memory auction = auctions[_nftAddress][_tokenId];
-        if (auction.payToken == address(0)) {
-            // refund previous best (if bid exists)
-            (bool successRefund, ) = _currentHighestBidder.call{
-                value: _currentHighestBid
-            }("");
-            require(successRefund, "failed to refund previous bidder");
-        } else {
-            IERC20 payToken = IERC20(auction.payToken);
-            require(
-                payToken.transfer(_currentHighestBidder, _currentHighestBid),
-                "failed to refund previous bidder"
-            );
-        }
+        require(
+            auction.payToken != address(0),
+            "ERC20 method used for FTM auction"
+        );
+        IERC20 payToken = IERC20(auction.payToken);
+        require(
+            payToken.transfer(_currentHighestBidder, _currentHighestBid),
+            "failed to refund previous bidder"
+        );
         emit BidRefunded(
             _nftAddress,
             _tokenId,

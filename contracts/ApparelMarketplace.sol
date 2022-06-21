@@ -115,7 +115,9 @@ interface IApparelAuction {
 }
 
 interface IApparelAddressRegistry {
-    function factory() external view returns (address);
+    function nftFactory() external view returns (address);
+
+    function artFactory() external view returns (address);
 
     function tokenRegistry() external view returns (address);
 
