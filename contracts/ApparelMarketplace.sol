@@ -140,7 +140,7 @@ interface IApparelPriceFeed {
 
 contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, ERC1155HolderUpgradeable, ERC721HolderUpgradeable {
     using SafeMath for uint256;
-    using AddressUpgradeable for address payable;
+    using AddressUpgradeable for address;
 
     /// @notice Events for the contract
     event ItemListed(
@@ -189,7 +189,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         uint256 tokenId
     );
     event UpdatePlatformFee(uint16 platformFee);
-    event UpdateTreasuryAddress(address payable treasuryAddress);
+    event UpdateTreasuryAddress(address treasuryAddress);
 
     /// @notice Structure for listed items
     struct Listing {
@@ -828,9 +828,9 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /**
      @notice Method for updating platform fee address
      @dev Only admin
-     @param _treasury payable address the address to sends the funds to
+     @param _treasury address the address to sends the funds to
      */
-    function updateTreasuryAddress(address payable _treasury)
+    function updateTreasuryAddress(address _treasury)
         external
         onlyOwner
     {
