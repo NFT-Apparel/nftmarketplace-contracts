@@ -922,7 +922,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         path[0] = uniswapV2Router.Metis();
         path[1] = proAddress;
 
-        // IERC20(uniswapV2Router.Metis()).approve(address(uniswapV2Router), tokenAmount);
+        IERC20(uniswapV2Router.Metis()).approve(address(uniswapV2Router), tokenAmount);
         // make the swap
         uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens( tokenAmount, 0, path, address(this), block.timestamp);
     }
