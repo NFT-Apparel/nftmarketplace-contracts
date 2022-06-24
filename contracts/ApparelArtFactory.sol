@@ -44,11 +44,11 @@ contract ApparelArtFactory is AccessControl {
     }
 
     function addModerator(address _moderator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _moderator);
+        _setupRole(MODERATOR_ROLE, _moderator);
     }
 
     function removeModerator(address _moderator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _revokeRole(DEFAULT_ADMIN_ROLE, _moderator);
+        _revokeRole(MODERATOR_ROLE, _moderator);
     }
 
     /**
