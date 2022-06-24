@@ -365,7 +365,6 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
                 nft.isApprovedForAll(_msgSender(), address(this)),
                 "item not approved"
             );
-            nft.safeTransferFrom(_msgSender(), address(this), _tokenId);
         } else if (
             IERC165(_nftAddress).supportsInterface(INTERFACE_ID_ERC1155)
         ) {
@@ -377,13 +376,6 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             require(
                 nft.isApprovedForAll(_msgSender(), address(this)),
                 "item not approved"
-            );
-            nft.safeTransferFrom(
-                _msgSender(),
-                address(this),
-                _tokenId,
-                _quantity,
-                bytes("")
             );
         } else {
             revert("invalid nft address");
@@ -432,7 +424,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             _msgSender()
         ];
 
-        _validOwner(_nftAddress, _tokenId, address(this), listedItem.quantity);
+        _validOwner(_nftAddress, _tokenId, _msgSender(), listedItem.quantity);
 
         _validPayToken(_payToken);
 
@@ -548,13 +540,13 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         // Transfer NFT to buyer
         if (IERC165(_nftAddress).supportsInterface(INTERFACE_ID_ERC721)) {
             IERC721(_nftAddress).safeTransferFrom(
-                address(this),
+                _owner,
                 _msgSender(),
                 _tokenId
             );
         } else {
             IERC1155(_nftAddress).safeTransferFrom(
-                address(this),
+                _owner,
                 _msgSender(),
                 _tokenId,
                 listedItem.quantity,
@@ -910,23 +902,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     ) private {
         Listing memory listedItem = listings[_nftAddress][_tokenId][_owner];
 
-        _validOwner(_nftAddress, _tokenId, address(this), listedItem.quantity);
-
-        if (IERC165(_nftAddress).supportsInterface(INTERFACE_ID_ERC721)) {
-            IERC721 nft = IERC721(_nftAddress);
-            nft.safeTransferFrom(address(this), _owner, _tokenId);
-        } else if (
-            IERC165(_nftAddress).supportsInterface(INTERFACE_ID_ERC1155)
-        ) {
-            IERC1155 nft = IERC1155(_nftAddress);
-            nft.safeTransferFrom(
-                address(this),
-                _owner,
-                _tokenId,
-                listedItem.quantity,
-                bytes("")
-            );
-        }
+        _validOwner(_nftAddress, _tokenId, _owner, listedItem.quantity);
 
         delete (listings[_nftAddress][_tokenId][_owner]);
         emit ItemCanceled(_owner, _nftAddress, _tokenId);
