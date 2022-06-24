@@ -119,7 +119,7 @@ contract ApparelArtFactory is AccessControl {
     /// @param  tokenContractAddress Address of NFT contract
     function registerTokenContract(address tokenContractAddress)
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(MODERATOR_ROLE)
     {
         require(!exists[tokenContractAddress], "Art contract already registered");
         require(IERC165(tokenContractAddress).supportsInterface(INTERFACE_ID_ERC1155), "Not an ERC1155 contract");
@@ -131,7 +131,7 @@ contract ApparelArtFactory is AccessControl {
     /// @param  tokenContractAddress Address of NFT contract
     function disableTokenContract(address tokenContractAddress)
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(MODERATOR_ROLE)
     {
         require(exists[tokenContractAddress], "Art contract is not registered");
         exists[tokenContractAddress] = false;
