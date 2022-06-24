@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import './IERC165.sol';
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import './IERC1155TokenReceiver.sol';
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";

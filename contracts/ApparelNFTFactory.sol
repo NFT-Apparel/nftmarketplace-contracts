@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ApparelNFTTradable.sol";
 
-contract ApparelNFTFactory is Ownable {
+contract ApparelNFTFactory is AccessControl {
     /// @dev Events of the contract
     event ContractCreated(address creator, address nft);
     event ContractDisabled(address caller, address nft);
@@ -29,6 +29,8 @@ contract ApparelNFTFactory is Ownable {
     mapping(address => bool) public exists;
 
     bytes4 private constant INTERFACE_ID_ERC721 = 0x80ac58cd;
+
+    bytes32 public constant MODERATOR_ROLE = keccak256("MODERATOR_ROLE");
     
     /// @notice Contract constructor
     constructor(
@@ -43,6 +45,15 @@ contract ApparelNFTFactory is Ownable {
         mintFee = _mintFee;
         feeRecipient = _feeRecipient;
         platformFee = _platformFee;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function addModerator(address _moderator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _moderator);
+    }
+
+    function removeModerator(address _moderator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(DEFAULT_ADMIN_ROLE, _moderator);
     }
 
      /**
@@ -50,7 +61,7 @@ contract ApparelNFTFactory is Ownable {
     @dev Only admin
     @param _auction address the auction contract address to set
     */
-    function updateAuction(address _auction) external onlyOwner {
+    function updateAuction(address _auction) external onlyRole(DEFAULT_ADMIN_ROLE) {
         auction = _auction;
     }
 
@@ -59,7 +70,7 @@ contract ApparelNFTFactory is Ownable {
     @dev Only admin
     @param _marketplace address the marketplace contract address to set
     */
-    function updateMarketplace(address _marketplace) external onlyOwner {
+    function updateMarketplace(address _marketplace) external onlyRole(DEFAULT_ADMIN_ROLE) {
         marketplace = _marketplace;
     }
 
@@ -68,7 +79,7 @@ contract ApparelNFTFactory is Ownable {
     @dev Only admin
     @param _mintFee uint256 the platform fee to set
     */
-    function updateMintFee(uint256 _mintFee) external onlyOwner {
+    function updateMintFee(uint256 _mintFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
         mintFee = _mintFee;
     }
 
@@ -77,7 +88,7 @@ contract ApparelNFTFactory is Ownable {
     @dev Only admin
     @param _platformFee uint256 the platform fee to set
     */
-    function updatePlatformFee(uint256 _platformFee) external onlyOwner {
+    function updatePlatformFee(uint256 _platformFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
         platformFee = _platformFee;
     }
 
@@ -88,7 +99,7 @@ contract ApparelNFTFactory is Ownable {
      */
     function updateFeeRecipient(address payable _feeRecipient)
         external
-        onlyOwner
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         feeRecipient = _feeRecipient;
     }
@@ -123,7 +134,7 @@ contract ApparelNFTFactory is Ownable {
     /// @param  tokenContractAddress Address of NFT contract
     function registerTokenContract(address tokenContractAddress)
         external
-        onlyOwner
+        onlyRole(MODERATOR_ROLE)
     {
         require(!exists[tokenContractAddress], "NFT contract already registered");
         require(IERC165(tokenContractAddress).supportsInterface(INTERFACE_ID_ERC721), "Not an ERC721 contract");
@@ -135,7 +146,7 @@ contract ApparelNFTFactory is Ownable {
     /// @param  tokenContractAddress Address of NFT contract
     function disableTokenContract(address tokenContractAddress)
         external
-        onlyOwner
+        onlyRole(MODERATOR_ROLE)
     {
         require(exists[tokenContractAddress], "NFT contract is not registered");
         exists[tokenContractAddress] = false;

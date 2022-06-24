@@ -253,6 +253,13 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @notice Address registry
     IApparelAddressRegistry public addressRegistry;
 
+    mapping (address => bool) public moderators;
+
+    modifier onlyModerator() {
+        require(moderators[_msgSender()] == true, "not allowed");
+        _;
+    }
+
     modifier isListed(
         address _nftAddress,
         uint256 _tokenId,
@@ -326,6 +333,14 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         peakAddress = _peak;
         proAddress = _pro;
         uniswapV2Router = IUniswapV2Router(_router);
+    }
+
+    function addModerator(address _moderator) external onlyOwner {
+        moderators[_moderator] = true;
+    }
+
+    function removeModerator(address _moderator) external onlyOwner {
+        moderators[_moderator] = false;
     }
 
     /// @notice Method for listing NFT
@@ -761,7 +776,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         address _creator,
         uint16 _royalty,
         address _feeRecipient
-    ) external onlyOwner {
+    ) external onlyModerator {
         require(_creator != address(0), "invalid creator address");
         require(_royalty <= 10000, "invalid royalty");
         require(
