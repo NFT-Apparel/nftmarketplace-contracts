@@ -287,7 +287,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     ) {
         Listing memory listedItem = listings[_nftAddress][_tokenId][_owner];
 
-        _validOwner(_nftAddress, _tokenId, address(this), listedItem.quantity);
+        _validOwner(_nftAddress, _tokenId, _owner, listedItem.quantity);
 
         require(_getNow() >= listedItem.startingTime, "item not buyable");
         _;
