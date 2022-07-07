@@ -11,7 +11,6 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import "./interfaces/IUniswapV2Router.sol";
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -244,9 +243,6 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @notice Peak Address
     address public proAddress;
 
-    /// @notice Netswap Router Address
-    IUniswapV2Router public uniswapV2Router;
-
     /// @notice NftAddress -> Royalty
     mapping(address => CollectionRoyalty) public collectionRoyalties;
 
@@ -319,20 +315,19 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         _;
     }
 
-    function initialize(address _treasury, uint16 _platformFee, address _peak, address _pro, address _router) public initializer {
+    function initialize(address _treasury, uint16 _platformFee, address _peak, address _pro) public initializer {
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
         __ERC1155Holder_init_unchained();
         __ERC721Holder_init_unchained();
-        __ApparelMarketplace_init_unchained(_treasury, _platformFee, _peak, _pro, _router);
+        __ApparelMarketplace_init_unchained(_treasury, _platformFee, _peak, _pro);
     }
 
-    function __ApparelMarketplace_init_unchained(address _treasury, uint16 _platformFee, address _peak, address _pro, address _router) internal onlyInitializing {
+    function __ApparelMarketplace_init_unchained(address _treasury, uint16 _platformFee, address _peak, address _pro) internal onlyInitializing {
         platformFee = _platformFee;
         treasuryWallet = _treasury;
         peakAddress = _peak;
         proAddress = _pro;
-        uniswapV2Router = IUniswapV2Router(_router);
     }
 
     function addModerator(address _moderator) external onlyOwner {
@@ -470,36 +465,11 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         uint256 price = listedItem.pricePerItem.mul(listedItem.quantity);
         uint256 feeAmount = price.mul(platformFee).div(1e3);
 
-        if(address(_payToken) == peakAddress) {
-            uint256 burnAmt = feeAmount.div(2);
-            uint256 treasuryAmt = feeAmount.sub(burnAmt);
-            IERC20(_payToken).transferFrom(
-                _msgSender(),
-                address(this),
-                feeAmount
-            );
-            IERC20(_payToken).transfer(treasuryWallet, treasuryAmt);
-            IERC20(_payToken).burn(burnAmt);
-        } else if(address(_payToken) == uniswapV2Router.Metis()) {
-            uint256 buybackAmt = feeAmount.div(4);
-            uint256 treasuryAmt = feeAmount.sub(buybackAmt);
-            IERC20(_payToken).transferFrom(
-                _msgSender(),
-                address(this),
-                feeAmount
-            );
-            IERC20(_payToken).transfer(treasuryWallet, treasuryAmt);
-            // BuyBack PRO Tokens
-            swapTokensForTokens(buybackAmt);
-            uint256 proAmt = IERC20(proAddress).balanceOf(address(this));
-            IERC20(proAddress).transfer(treasuryWallet, proAmt);
-        } else {
-            IERC20(_payToken).transferFrom(
-                _msgSender(),
-                treasuryWallet,
-                feeAmount
-            );
-        }
+        IERC20(_payToken).transferFrom(
+            _msgSender(),
+            treasuryWallet,
+            feeAmount
+        );
 
         address minter = minters[_nftAddress][_tokenId];
         uint16 royalty = royalties[_nftAddress][_tokenId];
@@ -650,36 +620,11 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         uint256 feeAmount = price.mul(platformFee).div(1e3);
         uint256 royaltyFee;
 
-        if(address(offer.payToken) == peakAddress) {
-            uint256 burnAmt = feeAmount.div(2);
-            uint256 treasuryAmt = feeAmount.sub(burnAmt);
-            IERC20(offer.payToken).transferFrom(
-                _creator,
-                address(this),
-                feeAmount
-            );
-            IERC20(offer.payToken).transfer(treasuryWallet, treasuryAmt);
-            IERC20(offer.payToken).burn(burnAmt);
-        } else if(address(offer.payToken) == uniswapV2Router.Metis()) {
-            uint256 buybackAmt = feeAmount.div(4);
-            uint256 treasuryAmt = feeAmount.sub(buybackAmt);
-            IERC20(offer.payToken).transferFrom(
-                _creator,
-                address(this),
-                feeAmount
-            );
-            IERC20(offer.payToken).transfer(treasuryWallet, treasuryAmt);
-            // BuyBack PRO Tokens
-            swapTokensForTokens(buybackAmt);
-            uint256 proAmt = IERC20(proAddress).balanceOf(address(this));
-            IERC20(proAddress).transfer(treasuryWallet, proAmt);
-        } else {
-            IERC20(offer.payToken).transferFrom(
-                _creator,
-                treasuryWallet,
-                feeAmount
-            );
-        }
+        IERC20(offer.payToken).transferFrom(
+            _creator,
+            treasuryWallet,
+            feeAmount
+        );
 
         address minter = minters[_nftAddress][_tokenId];
         uint16 royalty = royalties[_nftAddress][_tokenId];
@@ -906,15 +851,5 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
 
         delete (listings[_nftAddress][_tokenId][_owner]);
         emit ItemCanceled(_owner, _nftAddress, _tokenId);
-    }
-
-    function swapTokensForTokens(uint256 tokenAmount) private {
-        address[] memory path = new address[](2);
-        path[0] = uniswapV2Router.Metis();
-        path[1] = proAddress;
-
-        IERC20(uniswapV2Router.Metis()).approve(address(uniswapV2Router), tokenAmount);
-        // make the swap
-        uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens( tokenAmount, 0, path, address(this), block.timestamp);
     }
 }
