@@ -438,7 +438,8 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         address _nftAddress,
         uint256 _tokenId,
         address _payToken,
-        address _owner
+        address _owner,
+        uint256 _quantity
     )
         external
         nonReentrant
@@ -447,8 +448,9 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     {
         Listing memory listedItem = listings[_nftAddress][_tokenId][_owner];
         require(listedItem.payToken == _payToken, "invalid pay token");
+        require(listedItem.quantity >= _quantity, "invalid purchase amount");
 
-        _buyItem(_nftAddress, _tokenId, _payToken, _owner);
+        _buyItem(_nftAddress, _tokenId, _payToken, _owner, _quantity);
     }
 
     /// @notice Method for buying listed NFT
@@ -458,11 +460,12 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         address _nftAddress,
         uint256 _tokenId,
         address _payToken,
-        address _owner
+        address _owner,
+        uint256 _quantity
     ) private {
         Listing memory listedItem = listings[_nftAddress][_tokenId][_owner];
 
-        uint256 price = listedItem.pricePerItem.mul(listedItem.quantity);
+        uint256 price = listedItem.pricePerItem.mul(_quantity);
         uint256 feeAmount = price.mul(platformFee).div(1e3);
 
         IERC20(_payToken).transferFrom(
@@ -519,7 +522,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
                 _owner,
                 _msgSender(),
                 _tokenId,
-                listedItem.quantity,
+                _quantity,
                 bytes("")
             );
         }
@@ -529,12 +532,16 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             _msgSender(),
             _nftAddress,
             _tokenId,
-            listedItem.quantity,
+            _quantity,
             _payToken,
             getPrice(_payToken),
-            price.div(listedItem.quantity)
+            price.div(_quantity)
         );
-        delete (listings[_nftAddress][_tokenId][_owner]);
+        if (listedItem.quantity == _quantity) {
+            delete (listings[_nftAddress][_tokenId][_owner]);
+        } else {
+            listings[_nftAddress][_tokenId][_owner].quantity -= _quantity;
+        }
     }
 
     /// @notice Method for offering item
