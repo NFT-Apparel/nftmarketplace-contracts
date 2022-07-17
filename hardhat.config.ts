@@ -47,6 +47,13 @@ const config: HardhatUserConfig = {
           ? [process.env.METIS_PRIVATE_KEY]
           : [],
     },
+    polygon: {
+      url: process.env.POLY_URL || "",
+      accounts:
+        process.env.METIS_PRIVATE_KEY !== undefined
+          ? [process.env.METIS_PRIVATE_KEY]
+          : [],
+    },
     testnet: {
       url: "https://stardust.metis.io/?owner=588",
       accounts:

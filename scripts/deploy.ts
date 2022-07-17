@@ -21,15 +21,16 @@ async function main() {
     const observed_data : Array<any> = [];
     const generate_deploy_info = async function (contract : Contract, name : string, type : string){
   
-      let deploy_info : {_id : string, trx : string, name:string, block:object, type:string, created:object} = {_id : '', trx : '', name : '', block : {}, type : '',created:{}};
+      let deploy_info : {_id : string, trx : string, name:string, block:object, type:string, created:object, chainID: string} = {_id : '', trx : '', name : '', block : {}, type : '',created:{}, chainID: ''};
       deploy_info._id = contract.address;
+      deploy_info.chainID = "0x89";
       deploy_info.trx = contract.deployTransaction.hash;
       let blockNumber;
       deploy_info.name = name;
       {
         blockNumber = (await ethers.provider.getTransaction(contract.deployTransaction.hash)).blockNumber;
         deploy_info.block = {
-          "$numberLong": `${blockNumber.toString()}`
+          "$numberLong": `\"${blockNumber.toString()}\"`
         }
       }
       deploy_info.type = type;
@@ -37,7 +38,7 @@ async function main() {
         const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp
         deploy_info.created = {
           "$date": {
-            "$numberLong": `${timestamp.toString()}000`
+            "$numberLong": `\"${timestamp.toString()}000\"`
           }
         }
       }
@@ -65,9 +66,9 @@ async function main() {
     const nftFactory = await NFTFactory.deploy(
         auction.address,
         marketplace.address,
-        '100000000000000000',
+        '1000000000000000000',
         TREASURY_ADDRESS,
-        '750000000000000000'
+        '5000000000000000000'
     );
     await nftFactory.deployed();
     {
@@ -79,9 +80,9 @@ async function main() {
     const ArtFactory = await ethers.getContractFactory('ApparelArtFactory');
     const artFactory = await ArtFactory.deploy(
         marketplace.address,
-        '100000000000000000',
+        '1000000000000000000',
         TREASURY_ADDRESS,
-        '750000000000000000'
+        '5000000000000000000'
     );
     await artFactory.deployed();
     {
