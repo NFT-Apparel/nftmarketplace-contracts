@@ -611,6 +611,12 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
 
         _validPayToken(address(_payToken));
 
+        IERC20(_payToken).transferFrom(
+            _msgSender(),
+            address(this),
+            _quantity.mul(_pricePerItem)
+        );
+
         offers[_nftAddress][_tokenId][_msgSender()] = Offer(
             _payToken,
             _quantity,
@@ -636,6 +642,14 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         external
         offerExists(_nftAddress, _tokenId, _msgSender())
     {
+        Offer memory offer = offers[_nftAddress][_tokenId][_msgSender()];
+
+        IERC20(offer.payToken).transferFrom(
+            address(this),
+            _msgSender(),
+            offer.quantity.mul(offer.pricePerItem)
+        );
+
         delete (offers[_nftAddress][_tokenId][_msgSender()]);
         emit OfferCanceled(_msgSender(), _nftAddress, _tokenId);
     }
@@ -660,21 +674,11 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         if(address(offer.payToken) == peakAddress) {
             uint256 burnAmt = feeAmount.div(2);
             uint256 treasuryAmt = feeAmount.sub(burnAmt);
-            IERC20(offer.payToken).transferFrom(
-                _creator,
-                address(this),
-                feeAmount
-            );
             IERC20(offer.payToken).transfer(treasuryWallet, treasuryAmt);
             IERC20(offer.payToken).burn(burnAmt);
         } else if(address(offer.payToken) == uniswapV2Router.Metis()) {
             uint256 buybackAmt = feeAmount.div(4);
             uint256 treasuryAmt = feeAmount.sub(buybackAmt);
-            IERC20(offer.payToken).transferFrom(
-                _creator,
-                address(this),
-                feeAmount
-            );
             IERC20(offer.payToken).transfer(treasuryWallet, treasuryAmt);
             // BuyBack PRO Tokens
             swapTokensForTokens(buybackAmt);
@@ -682,7 +686,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             IERC20(proAddress).transfer(treasuryWallet, proAmt);
         } else {
             IERC20(offer.payToken).transferFrom(
-                _creator,
+                address(this),
                 treasuryWallet,
                 feeAmount
             );
@@ -693,20 +697,20 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
 
         if (minter != address(0) && royalty != 0) {
             royaltyFee = price.sub(feeAmount).mul(royalty).div(10000);
-            offer.payToken.transferFrom(_creator, minter, royaltyFee);
+            offer.payToken.transferFrom(address(this), minter, royaltyFee);
             feeAmount = feeAmount.add(royaltyFee);
         } else {
             minter = collectionRoyalties[_nftAddress].feeRecipient;
             royalty = collectionRoyalties[_nftAddress].royalty;
             if (minter != address(0) && royalty != 0) {
                 royaltyFee = price.sub(feeAmount).mul(royalty).div(10000);
-                offer.payToken.transferFrom(_creator, minter, royaltyFee);
+                offer.payToken.transferFrom(address(this), minter, royaltyFee);
                 feeAmount = feeAmount.add(royaltyFee);
             }
         }
 
         offer.payToken.transferFrom(
-            _creator,
+            address(this),
             _msgSender(),
             price.sub(feeAmount)
         );
