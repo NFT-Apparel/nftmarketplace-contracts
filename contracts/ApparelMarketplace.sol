@@ -237,12 +237,6 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @notice Platform fee receipient
     address public treasuryWallet;
 
-    /// @notice Peak Address
-    address public peakAddress;
-
-    /// @notice Peak Address
-    address public proAddress;
-
     /// @notice NftAddress -> Royalty
     mapping(address => CollectionRoyalty) public collectionRoyalties;
 
@@ -315,19 +309,17 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         _;
     }
 
-    function initialize(address _treasury, uint16 _platformFee, address _peak, address _pro) public initializer {
+    function initialize(address _treasury, uint16 _platformFee) public initializer {
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
         __ERC1155Holder_init_unchained();
         __ERC721Holder_init_unchained();
-        __ApparelMarketplace_init_unchained(_treasury, _platformFee, _peak, _pro);
+        __ApparelMarketplace_init_unchained(_treasury, _platformFee);
     }
 
-    function __ApparelMarketplace_init_unchained(address _treasury, uint16 _platformFee, address _peak, address _pro) internal onlyInitializing {
+    function __ApparelMarketplace_init_unchained(address _treasury, uint16 _platformFee) internal onlyInitializing {
         platformFee = _platformFee;
         treasuryWallet = _treasury;
-        peakAddress = _peak;
-        proAddress = _pro;
     }
 
     function addModerator(address _moderator) external onlyOwner {
