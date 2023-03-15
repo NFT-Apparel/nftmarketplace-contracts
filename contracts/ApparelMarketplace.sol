@@ -600,15 +600,19 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
     /// @param _tokenId TokenId
     function cancelOffer(address _nftAddress, uint256 _tokenId)
         external
-        offerExists(_nftAddress, _tokenId, _msgSender())
     {
         Offer memory offer = offers[_nftAddress][_tokenId][_msgSender()];
-
+        require(
+            offer.quantity > 0,
+            "offer not exists or expired"
+        );
+        IERC20(offer.payToken).approve(address(this), offer.quantity.mul(offer.pricePerItem));
         IERC20(offer.payToken).transferFrom(
             address(this),
             _msgSender(),
             offer.quantity.mul(offer.pricePerItem)
         );
+
         delete (offers[_nftAddress][_tokenId][_msgSender()]);
         emit OfferCanceled(_msgSender(), _nftAddress, _tokenId);
     }
