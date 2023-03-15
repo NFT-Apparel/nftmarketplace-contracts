@@ -646,6 +646,7 @@ contract ApparelMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
             offer.quantity > 0,
             "offer not exists or expired"
         );
+        IERC20(offer.payToken).approve(address(this), offer.quantity.mul(offer.pricePerItem));
         IERC20(offer.payToken).transferFrom(
             address(this),
             _msgSender(),
