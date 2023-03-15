@@ -21,9 +21,11 @@ async function main() {
     const observed_data : Array<any> = [];
     const generate_deploy_info = async function (contract : Contract, name : string, type : string){
   
-      let deploy_info : {_id : string, trx : string, name:string, block:object, type:string, created:object, chainID: string} = {_id : '', trx : '', name : '', block : {}, type : '',created:{}, chainID: ''};
-      deploy_info._id = contract.address;
-      deploy_info.chainID = "0x89";
+      let chainID = "0x13881";
+      let deploy_info : {_id : string, contract:string, trx : string, name:string, block:object, type:string, created:object, chainID:string} = {_id : '', contract:'', trx : '', name : '', block : {}, type : '',created:{}, chainID:chainID};
+      deploy_info._id = contract.address+"_" + chainID;
+      deploy_info.contract = contract.address;
+      deploy_info.chainID = chainID;
       deploy_info.trx = contract.deployTransaction.hash;
       let blockNumber;
       deploy_info.name = name;
